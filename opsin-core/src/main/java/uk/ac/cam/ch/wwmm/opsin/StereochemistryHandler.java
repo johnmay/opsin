@@ -371,13 +371,13 @@ class StereochemistryHandler {
 	}
 
 	private boolean attemptAssignmentOfAxialStereoFragment(Fragment fragment,
-														   String desc,
+														   BondStereoValue axialStereoVal,
 														   String locant) throws CipOrderingException {
 		if (locant == null) {//undefined locant
 			for (Bond bond : fragment.getBondSet()) {
 				if (!notExplicitlyDefinedAxialBondMap.containsKey(bond))
 					continue;
-				setAxialStereo(bond, desc);
+				setAxialStereo(bond, axialStereoVal);
 				return true;
 			}
 
@@ -386,7 +386,7 @@ class StereochemistryHandler {
 			for (Bond bond : interFragmentBonds) {
 				if (!notExplicitlyDefinedAxialBondMap.containsKey(bond))
 					continue;
-				setAxialStereo(bond, desc);
+				setAxialStereo(bond, axialStereoVal);
 				return true;
 			}
 		}
@@ -409,7 +409,7 @@ class StereochemistryHandler {
 						continue;
 					if (!notExplicitlyDefinedAxialBondMap.containsKey(bond))
 						continue;
-					setAxialStereo(bond, desc);
+					setAxialStereo(bond, axialStereoVal);
 					return true;
 				}
 			}
@@ -417,10 +417,9 @@ class StereochemistryHandler {
 		return false;
 	}
 
-	private void setAxialStereo(Bond bond, String desc) throws CipOrderingException {
+	private void setAxialStereo(Bond bond, BondStereoValue axialSteroVal) throws CipOrderingException {
 		Atom[] carriers = notExplicitlyDefinedAxialBondMap.get(bond).getOrderedStereoAtoms();
-		BondStereoValue value = BondStereoValue.ofAxial(desc);
-		bond.setBondStereoElement(carriers, value);
+		bond.setBondStereoElement(carriers, axialSteroVal);
 		notExplicitlyDefinedAxialBondMap.remove(bond);
 	}
 
@@ -516,6 +515,11 @@ class StereochemistryHandler {
 	private boolean assignAxialStereochem(Element stereoChemistryEl) throws CipOrderingException {
 		String locant = stereoChemistryEl.getAttributeValue(LOCANT_ATR);
 		String desc   = stereoChemistryEl.getAttributeValue(VALUE_ATR);
+		
+		BondStereoValue axialStereoVal = BondStereoValue.ofAxial(desc);
+		if (axialStereoVal == null) {
+			return false;
+		}
 
 		Element parentSubBracketOrRoot = stereoChemistryEl.getParent();
 		List<Fragment> possibleFragments = StructureBuildingMethods.findAlternativeFragments(parentSubBracketOrRoot);
@@ -525,7 +529,7 @@ class StereochemistryHandler {
 		}
 
 		for (Fragment fragment : possibleFragments) {
-            if (attemptAssignmentOfAxialStereoFragment(fragment, desc, locant)) {
+            if (attemptAssignmentOfAxialStereoFragment(fragment, axialStereoVal, locant)) {
 				return true;
 			}
 		}
