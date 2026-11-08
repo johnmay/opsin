@@ -915,8 +915,9 @@ class FragmentTools {
 					return d == 3 && v == 4;
 				assert q == 0;
 				return d == 3 && v == 3;
+			default:
+				return false;
 		}
-		return false;
 	}
 
 	/**
