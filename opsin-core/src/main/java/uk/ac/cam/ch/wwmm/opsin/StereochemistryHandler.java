@@ -33,7 +33,6 @@ class StereochemistryHandler {
 	private final BuildState state;
 	private final Map<Atom, StereoCentre> atomStereoCentreMap;
 	private final Map<Bond, StereoBond> bondStereoBondMap;
-	private final Map<Bond, AxialBond> bondAxialMap;
 	private final Map<Atom, StereoCentre> notExplicitlyDefinedStereoCentreMap;
 	private final Map<Bond, StereoBond> notExplicitlyDefinedStereoBondMap;
 	private final Map<Bond, AxialBond> notExplicitlyDefinedAxialBondMap;
@@ -47,7 +46,6 @@ class StereochemistryHandler {
 		notExplicitlyDefinedStereoCentreMap = new HashMap<>(atomStereoCentreMap);
 		this.bondStereoBondMap = bondStereoBondMap;
 		notExplicitlyDefinedStereoBondMap = new HashMap<>(bondStereoBondMap);
-		this.bondAxialMap = bondAxialMap;
 		notExplicitlyDefinedAxialBondMap = new HashMap<>(bondAxialMap);
 	}
 
@@ -379,11 +377,7 @@ class StereochemistryHandler {
 			for (Bond bond : fragment.getBondSet()) {
 				if (!notExplicitlyDefinedAxialBondMap.containsKey(bond))
 					continue;
-				Atom[] carriers = notExplicitlyDefinedAxialBondMap.get(bond)
-																  .getOrderedStereoAtoms();
-				BondStereoValue value = BondStereoValue.ofAxial(desc);
-				bond.setBondStereoElement(carriers, value);
-				notExplicitlyDefinedAxialBondMap.remove(bond);
+				setAxialStereo(bond, desc);
 				return true;
 			}
 
@@ -392,11 +386,7 @@ class StereochemistryHandler {
 			for (Bond bond : interFragmentBonds) {
 				if (!notExplicitlyDefinedAxialBondMap.containsKey(bond))
 					continue;
-				Atom[] carriers = notExplicitlyDefinedAxialBondMap.get(bond)
-																  .getOrderedStereoAtoms();
-				BondStereoValue value = BondStereoValue.ofAxial(desc);
-				bond.setBondStereoElement(carriers, value);
-				notExplicitlyDefinedAxialBondMap.remove(bond);
+				setAxialStereo(bond, desc);
 				return true;
 			}
 		}
@@ -419,16 +409,19 @@ class StereochemistryHandler {
 						continue;
 					if (!notExplicitlyDefinedAxialBondMap.containsKey(bond))
 						continue;
-					Atom[] carriers = notExplicitlyDefinedAxialBondMap.get(bond)
-																	  .getOrderedStereoAtoms();;
-					BondStereoValue value = BondStereoValue.ofAxial(desc);
-					bond.setBondStereoElement(carriers, value);
-					notExplicitlyDefinedAxialBondMap.remove(bond);
+					setAxialStereo(bond, desc);
 					return true;
 				}
 			}
 		}
 		return false;
+	}
+
+	private void setAxialStereo(Bond bond, String desc) throws CipOrderingException {
+		Atom[] carriers = notExplicitlyDefinedAxialBondMap.get(bond).getOrderedStereoAtoms();
+		BondStereoValue value = BondStereoValue.ofAxial(desc);
+		bond.setBondStereoElement(carriers, value);
+		notExplicitlyDefinedAxialBondMap.remove(bond);
 	}
 
 	/**
