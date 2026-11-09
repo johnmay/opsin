@@ -330,19 +330,16 @@ class SMILESWriter {
 									  smilesOutputOrder.indexOf(bond.getToAtom()));
 					BondStereo bondStereo = bond.getBondStereo();
 					Atom[] carriers = bondStereo.getAtomRefs4();
-					Integer[] indexes = new Integer[]{0,1,2,3};
-					Arrays.sort(indexes,
-								(i, j) -> Integer.compare(smilesOutputOrder.indexOf(carriers[indexes[i]]),
-														                 smilesOutputOrder.indexOf(carriers[indexes[j]])));
+					Atom[] outputCarriers = Arrays.copyOf(carriers, carriers.length);
+					Arrays.sort(outputCarriers,
+								(a, b) -> Integer.compare(smilesOutputOrder.indexOf(a),
+														              smilesOutputOrder.indexOf(b)));
 					Bond refBond = structure.findBond(smilesOutputOrder.get(lo).getID(),
-													  carriers[indexes[0]].getID());
+													  outputCarriers[0].getID());
 
-					boolean flipped = false;
-					for (int i=0; i<carriers.length; i++) {
-						for (int j=i+1; j<carriers.length; j++)
-							if (indexes[i] > indexes[j])
-								flipped = !flipped;
-					}
+					boolean flipped =
+							(StereochemistryHandler.swapsRequiredToSort(carriers)%2) !=
+							(StereochemistryHandler.swapsRequiredToSort(outputCarriers)%2);
 					if (bondStereo.getBondStereoValue() == BondStereoValue.RIGHT != flipped)
 						extendedSmiles.add("wU:" + lo + "." + smilesBondOrder.indexOf(refBond));
 					else

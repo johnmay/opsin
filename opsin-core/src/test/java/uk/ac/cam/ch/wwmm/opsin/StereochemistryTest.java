@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.mockito.Mockito.mock;
 
 import java.util.ArrayList;
@@ -1038,6 +1039,26 @@ public class StereochemistryTest {
 								result.getStatus());
 		Assertions.assertEquals("C1(=CC=CC2=CC=CC=C12)C1=CC=CC2=CC=CC=C12",
 								result.getSmiles());
+	}
+
+	@Test
+	public void testAxialStereoDistinguishesOppositeConfigurations() throws StructureBuildingException {
+		Fragment f = fm.buildSMILES("C1=CC=C2C(=C1)C=CC(=C2C3=C(C=CC4=CC=CC=C43)O)O");
+		fm.makeHydrogensExplicit();
+		Bond b = f.getAtomByID(10).getBondToAtom(f.getAtomByID(11));
+		b.setBondStereo(new BondStereo(
+				new Atom[]{f.getAtomByID(12), f.getAtomByID(20),
+						   f.getAtomByID(4), f.getAtomByID(9)},
+				BondStereoValue.RIGHT));
+		String expected = SMILESWriter.generateSmiles(f, SmilesOptions.CXSMILES_ATROPISOMERS_HACK);
+		b.setBondStereo(new BondStereo(
+				new Atom[]{f.getAtomByID(12), f.getAtomByID(20),
+						   f.getAtomByID(9), f.getAtomByID(4)},
+				BondStereoValue.RIGHT));
+
+		assertNotEquals(expected,
+						SMILESWriter.generateSmiles(f, SmilesOptions.CXSMILES_ATROPISOMERS_HACK),
+						"Different configuration must not give same extended SMILES");
 	}
 
 	private String atomRefsToIdStr(Atom[] atomRefs4) {
